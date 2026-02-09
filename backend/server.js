@@ -57,7 +57,7 @@ app.get('/auth/discord/callback', async (req, res) => {
   const { code } = req.query;
 
   if (!code) {
-    return res.redirect('/?error=no_code');
+    return res.redirect('/login.html?error=no_code');
   }
 
   try {
@@ -92,7 +92,7 @@ app.get('/auth/discord/callback', async (req, res) => {
       const hasRequiredRole = member.roles.includes(REQUIRED_ROLE_ID);
 
       if (!hasRequiredRole) {
-        return res.redirect('/?error=no_role');
+        return res.redirect('/login.html?error=no_role');
       }
 
       // User has required role - set session
@@ -105,18 +105,18 @@ app.get('/auth/discord/callback', async (req, res) => {
 
       req.session.save((err) => {
         if (err) {
-          return res.redirect('/?error=session_error');
+          return res.redirect('/login.html?error=session_error');
         }
         res.redirect('/database.html');
       });
 
     } catch (guildError) {
-      return res.redirect('/?error=not_in_guild');
+      return res.redirect('/login.html?error=not_in_guild');
     }
 
   } catch (error) {
     console.error('OAuth error:', error.message);
-    res.redirect('/?error=auth_failed');
+    res.redirect('/login.html?error=auth_failed');
   }
 });
 

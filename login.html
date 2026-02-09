@@ -149,7 +149,7 @@
         errorMsg.classList.remove('hidden');
         switch(error) {
           case 'no_role':
-            errorMsg.textContent = '❌ Nie masz wymaganej roli na serwerze';
+            errorMsg.textContent = '❌ Nie masz wymaganej roli na serwerze Discord';
             break;
           case 'not_in_guild':
             errorMsg.textContent = '❌ Nie jesteś członkiem serwera Command EMS';
@@ -159,6 +159,9 @@
             break;
           case 'no_code':
             errorMsg.textContent = '❌ Brak kodu autoryzacji';
+            break;
+          case 'session_error':
+            errorMsg.textContent = '❌ Błąd sesji, spróbuj ponownie';
             break;
           default:
             errorMsg.textContent = '❌ Błąd logowania, spróbuj ponownie';
