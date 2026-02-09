@@ -282,270 +282,308 @@
       <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      // Data storage with localStorage
-      const defaultStaffData = {
-        hic: [
-          { badge: 'HIC001', name: 'Jan Kowalski', rank: 'Lekarz Specjalista', spec: 'Anestezjolog' },
-          { badge: 'HIC002', name: 'Maria Nowak', rank: 'Pielęgniar Specjalistka', spec: '-' },
-          { badge: 'HIC003', name: 'Andrzej Dąbrowski', rank: 'Lekarz Rezydent', spec: '-' },
-          { badge: 'HIC004', name: 'Ewa Wróblewska', rank: 'Lekarz Specjalista', spec: 'Respirolog' }
-        ],
-        mr: [
-          { badge: 'MR001', name: 'Piotr Lewandowski', rank: 'Ratownik Medyczny EMT-P', spec: 'Ratownictwo przedszpitalne' },
-          { badge: 'MR002', name: 'Krystyna Sicińska', rank: 'Ratownik Medyczny', spec: 'Transport medyczny' },
-          { badge: 'MR003', name: 'Tomasz Puchała', rank: 'Ratownik Medyczny', spec: 'Trauma' },
-          { badge: 'MR004', name: 'Joanna Zielińska', rank: 'Kierowca Ratowniczy', spec: 'Pierwsza pomoc' },
-          { badge: 'MR005', name: 'Mateusz Bednarz', rank: 'Dispatcher Radiowy', spec: 'Dyspozytornia' }
-        ],
-        intern: [
-          { badge: 'INT001', name: 'Anna Nowacka', rank: 'Praktykantka', spec: '-' },
-          { badge: 'INT002', name: 'Karol Skowron', rank: 'Praktykant', spec: '-' },
-          { badge: 'INT003', name: 'Magdalena Kosińska', rank: 'Praktykantka', spec: '-' }
-        ]
-      };
+      (function () {
+        const supabaseUrl = "https://kvpqhvcnlbaivyvzitpn.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cHFodmNubGJhaXZ5dnppdHBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2Njg4MTYsImV4cCI6MjA4NjI0NDgxNn0.CmZLNzklZEeqHZHwtM0Dy01fyvfJavSTGZv1T77XTX4";
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        const tableName = "ems_staff";
 
-      // Załaduj dane z localStorage lub użyj domyślnych
-      let staffData = JSON.parse(localStorage.getItem('staffData')) || defaultStaffData;
+        let staffData = { hic: [], mr: [], intern: [] };
+        let currentEditingUnit = null;
+        let currentEditingId = null;
+        let isAddingNew = false;
 
-      // Funkcja do zapisywania danych w localStorage
-      function saveStaffData() {
-        localStorage.setItem('staffData', JSON.stringify(staffData));
-      }
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tableSections = document.querySelectorAll('.table-section');
+        const modal = document.getElementById('editModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const closeButtons = document.querySelectorAll('.close-modal');
+        const editForm = document.getElementById('editForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const addStaffBtns = document.querySelectorAll('.btn-add-staff');
+        const deleteConfirmBtn = document.getElementById('confirmDeleteBtn');
 
-      let currentEditingUnit = null;
-      let currentEditingId = null;
-      let isAddingNew = false;
+        let deleteUnit = null;
+        let deleteId = null;
+        let deleteIds = null;
 
-      // Tab switching
-      const tabBtns = document.querySelectorAll('.tab-btn');
-      const tableSections = document.querySelectorAll('.table-section');
-
-      tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          const unit = btn.getAttribute('data-unit');
-          tabBtns.forEach(b => b.classList.remove('active'));
-          tableSections.forEach(s => s.classList.remove('active'));
-          clearAllSelections();
-          btn.classList.add('active');
-          document.getElementById(`${unit}-section`).classList.add('active');
+        tabBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const unit = btn.getAttribute('data-unit');
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tableSections.forEach(s => s.classList.remove('active'));
+            clearAllSelections();
+            btn.classList.add('active');
+            document.getElementById(`${unit}-section`).classList.add('active');
+          });
         });
-      });
 
-      // Modal and form elements
-      const modal = document.getElementById('editModal');
-      const deleteModal = document.getElementById('deleteModal');
-      const modalTitle = document.getElementById('modalTitle');
-      const closeButtons = document.querySelectorAll('.close-modal');
-      const editForm = document.getElementById('editForm');
-      const submitBtn = document.getElementById('submitBtn');
-      const addStaffBtns = document.querySelectorAll('.btn-add-staff');
-
-      // Add new staff button
-      addStaffBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          isAddingNew = true;
-          currentEditingUnit = e.target.getAttribute('data-unit');
-          currentEditingId = null;
-          
-          modalTitle.textContent = 'Dodaj nowego pracownika';
-          submitBtn.textContent = 'Dodaj';
-          
-          document.getElementById('editBadge').value = '';
-          document.getElementById('editName').value = '';
-          document.getElementById('editRank').value = '';
-          document.getElementById('editSpec').value = '';
-          
-          modal.classList.add('active');
-        });
-      });
-
-      // Edit button listeners
-      function attachEditListeners() {
-        const editBtns = document.querySelectorAll('.edit-btn');
-        editBtns.forEach(btn => {
+        addStaffBtns.forEach(btn => {
           btn.addEventListener('click', (e) => {
-            isAddingNew = false;
+            isAddingNew = true;
             currentEditingUnit = e.target.getAttribute('data-unit');
-            currentEditingId = parseInt(e.target.getAttribute('data-id'));
-            const data = staffData[currentEditingUnit][currentEditingId];
-            
-            modalTitle.textContent = 'Edycja danych';
-            submitBtn.textContent = 'Zapisz';
-            
-            document.getElementById('editBadge').value = data.badge;
-            document.getElementById('editName').value = data.name;
-            document.getElementById('editRank').value = data.rank;
-            document.getElementById('editSpec').value = data.spec;
-            
+            currentEditingId = null;
+
+            modalTitle.textContent = 'Dodaj nowego pracownika';
+            submitBtn.textContent = 'Dodaj';
+
+            document.getElementById('editBadge').value = '';
+            document.getElementById('editName').value = '';
+            document.getElementById('editRank').value = '';
+            document.getElementById('editSpec').value = '';
+
             modal.classList.add('active');
           });
         });
-      }
 
-      attachEditListeners();
+        function attachEditListeners() {
+          const editBtns = document.querySelectorAll('.edit-btn');
+          editBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              isAddingNew = false;
+              currentEditingUnit = e.target.getAttribute('data-unit');
+              currentEditingId = e.target.getAttribute('data-id');
+              const data = staffData[currentEditingUnit].find(row => String(row.id) === String(currentEditingId));
 
-      // Close modal
-      closeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          modal.classList.remove('active');
-          deleteModal.classList.remove('active');
-          clearAllSelections();
-        });
-      });
+              if (!data) {
+                return;
+              }
 
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          modal.classList.remove('active');
-        }
-      });
+              modalTitle.textContent = 'Edycja danych';
+              submitBtn.textContent = 'Zapisz';
 
-      deleteModal.addEventListener('click', (e) => {
-        if (e.target === deleteModal) {
-          deleteModal.classList.remove('active');
-          clearAllSelections();
-        }
-      });
+              document.getElementById('editBadge').value = data.badge || '';
+              document.getElementById('editName').value = data.name || '';
+              document.getElementById('editRank').value = data.rank || '';
+              document.getElementById('editSpec').value = data.spec || '';
 
-      // Form submission
-      editForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const newData = {
-          badge: document.getElementById('editBadge').value,
-          name: document.getElementById('editName').value,
-          rank: document.getElementById('editRank').value,
-          spec: document.getElementById('editSpec').value
-        };
-
-        if (isAddingNew) {
-          staffData[currentEditingUnit].push(newData);
-        } else {
-          staffData[currentEditingUnit][currentEditingId] = newData;
+              modal.classList.add('active');
+            });
+          });
         }
 
-        saveStaffData();
-        updateTable(currentEditingUnit);
-        modal.classList.remove('active');
-        attachEditListeners();
-      });
+        function attachDeleteListeners() {
+          const delBtns = document.querySelectorAll('.del-btn');
+          delBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              deleteUnit = e.target.getAttribute('data-unit');
+              deleteId = e.target.getAttribute('data-id');
+              deleteIds = null;
+              const staffMember = staffData[deleteUnit].find(row => String(row.id) === String(deleteId));
 
-      function updateTable(unit) {
-        const section = document.getElementById(`${unit}-section`);
-        const tbody = section.querySelector('tbody');
-        const data = staffData[unit];
+              document.getElementById('deleteConfirmName').textContent = staffMember ? staffMember.name : '';
+              deleteModal.classList.add('active');
+            });
+          });
+        }
 
-        tbody.innerHTML = '';
-        data.forEach((row, idx) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${row.badge}</td>
-            <td>${row.name}</td>
-            <td>${row.rank}</td>
-            <td>${row.spec}</td>
-            <td><button class="edit-btn" data-unit="${unit}" data-id="${idx}">Edytuj</button><button class="del-btn" data-unit="${unit}" data-id="${idx}">Usuń</button><input type="checkbox" class="row-select" data-unit="${unit}" data-id="${idx}" /></td>
-          `;
-          tbody.appendChild(tr);
-        });
-        attachEditListeners();
-        attachDeleteListeners();
-        clearSelection(unit);
-      }
-
-      // Initial render from storage
-      ['hic', 'mr', 'intern'].forEach(unit => updateTable(unit));
-
-      // Delete functionality
-      const deleteConfirmBtn = document.getElementById('confirmDeleteBtn');
-      let deleteUnit = null;
-      let deleteId = null;
-      let deleteIds = null;
-
-      function attachDeleteListeners() {
-        const delBtns = document.querySelectorAll('.del-btn');
-        delBtns.forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            deleteUnit = e.target.getAttribute('data-unit');
-            deleteId = parseInt(e.target.getAttribute('data-id'));
-            deleteIds = null;
-            const staffMember = staffData[deleteUnit][deleteId];
-            
-            document.getElementById('deleteConfirmName').textContent = staffMember.name;
-            deleteModal.classList.add('active');
+        closeButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            modal.classList.remove('active');
+            deleteModal.classList.remove('active');
+            clearAllSelections();
           });
         });
-      }
 
-      deleteConfirmBtn.addEventListener('click', () => {
-        if (deleteIds && deleteIds.length > 0) {
-          deleteIds.sort((a, b) => b - a).forEach(id => {
-            staffData[deleteUnit].splice(id, 1);
-          });
-        } else {
-          staffData[deleteUnit].splice(deleteId, 1);
-        }
-        deleteIds = null;
-        saveStaffData();
-        updateTable(deleteUnit);
-        clearSelection(deleteUnit);
-        deleteModal.classList.remove('active');
-      });
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.remove('active');
+          }
+        });
 
-      const bulkDeleteButtons = document.querySelectorAll('.btn-delete-selected');
-      bulkDeleteButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const unit = e.target.getAttribute('data-unit');
-          const selected = Array.from(document.querySelectorAll(`.row-select[data-unit="${unit}"]:checked`))
-            .map(input => parseInt(input.getAttribute('data-id')));
+        deleteModal.addEventListener('click', (e) => {
+          if (e.target === deleteModal) {
+            deleteModal.classList.remove('active');
+            clearAllSelections();
+          }
+        });
 
-          if (selected.length === 0) {
+        editForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          const newData = {
+            unit: currentEditingUnit,
+            badge: document.getElementById('editBadge').value.trim(),
+            name: document.getElementById('editName').value.trim(),
+            rank: document.getElementById('editRank').value.trim(),
+            spec: document.getElementById('editSpec').value.trim() || '-'
+          };
+
+          if (isAddingNew) {
+            const { error } = await supabaseClient.from(tableName).insert([newData]);
+            if (error) {
+              console.error('Supabase insert error:', error);
+              alert('Błąd zapisu. Spróbuj ponownie.');
+              return;
+            }
+          } else {
+            const { error } = await supabaseClient
+              .from(tableName)
+              .update({
+                badge: newData.badge,
+                name: newData.name,
+                rank: newData.rank,
+                spec: newData.spec
+              })
+              .eq('id', currentEditingId);
+            if (error) {
+              console.error('Supabase update error:', error);
+              alert('Błąd zapisu. Spróbuj ponownie.');
+              return;
+            }
+          }
+
+          modal.classList.remove('active');
+          await loadStaff();
+        });
+
+        async function loadStaff() {
+          const { data, error } = await supabaseClient
+            .from(tableName)
+            .select('id, unit, badge, name, rank, spec, created_at')
+            .order('created_at', { ascending: true });
+
+          if (error) {
+            console.error('Supabase load error:', error);
+            alert('Błąd ładowania bazy danych. Spróbuj ponownie.');
             return;
           }
 
-          deleteUnit = unit;
-          deleteIds = selected;
+          staffData = { hic: [], mr: [], intern: [] };
+          (data || []).forEach(row => {
+            if (staffData[row.unit]) {
+              staffData[row.unit].push(row);
+            }
+          });
+
+          ['hic', 'mr', 'intern'].forEach(unit => updateTable(unit));
+        }
+
+        function updateTable(unit) {
+          const section = document.getElementById(`${unit}-section`);
+          const tbody = section.querySelector('tbody');
+          const data = staffData[unit];
+
+          tbody.innerHTML = '';
+          if (!data.length) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 5;
+            cell.textContent = 'Brak wpisów w tej jednostce.';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+            clearSelection(unit);
+            return;
+          }
+
+          data.forEach((row) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${row.badge || '-'}</td>
+              <td>${row.name || '-'}</td>
+              <td>${row.rank || '-'}</td>
+              <td>${row.spec || '-'}</td>
+              <td><button class="edit-btn" data-unit="${unit}" data-id="${row.id}">Edytuj</button><button class="del-btn" data-unit="${unit}" data-id="${row.id}">Usuń</button><input type="checkbox" class="row-select" data-unit="${unit}" data-id="${row.id}" /></td>
+            `;
+            tbody.appendChild(tr);
+          });
+          attachEditListeners();
+          attachDeleteListeners();
+          clearSelection(unit);
+        }
+
+        deleteConfirmBtn.addEventListener('click', async () => {
+          if (deleteIds && deleteIds.length > 0) {
+            const { error } = await supabaseClient
+              .from(tableName)
+              .delete()
+              .in('id', deleteIds);
+            if (error) {
+              console.error('Supabase delete error:', error);
+              alert('Błąd usuwania. Spróbuj ponownie.');
+              return;
+            }
+          } else if (deleteId) {
+            const { error } = await supabaseClient
+              .from(tableName)
+              .delete()
+              .eq('id', deleteId);
+            if (error) {
+              console.error('Supabase delete error:', error);
+              alert('Błąd usuwania. Spróbuj ponownie.');
+              return;
+            }
+          }
+
+          deleteIds = null;
           deleteId = null;
-
-          const label = selected.length === 1
-            ? staffData[unit][selected[0]].name
-            : `zaznaczonych pracowników (${selected.length})`;
-
-          document.getElementById('deleteConfirmName').textContent = label;
-          deleteModal.classList.add('active');
+          deleteModal.classList.remove('active');
+          await loadStaff();
+          if (deleteUnit) {
+            clearSelection(deleteUnit);
+          }
         });
-      });
 
-      const selectAllBoxes = document.querySelectorAll('.select-all');
-      selectAllBoxes.forEach(box => {
-        box.addEventListener('change', (e) => {
-          const unit = e.target.getAttribute('data-unit');
-          const isChecked = e.target.checked;
-          document.querySelectorAll(`.row-select[data-unit="${unit}"]`).forEach(input => {
-            input.checked = isChecked;
+        const bulkDeleteButtons = document.querySelectorAll('.btn-delete-selected');
+        bulkDeleteButtons.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const unit = e.target.getAttribute('data-unit');
+            const selected = Array.from(document.querySelectorAll(`.row-select[data-unit="${unit}"]:checked`))
+              .map(input => input.getAttribute('data-id'))
+              .filter(Boolean);
+
+            if (selected.length === 0) {
+              return;
+            }
+
+            deleteUnit = unit;
+            deleteIds = selected;
+            deleteId = null;
+
+            const label = selected.length === 1
+              ? (staffData[unit].find(row => String(row.id) === String(selected[0])) || {}).name
+              : `zaznaczonych pracowników (${selected.length})`;
+
+            document.getElementById('deleteConfirmName').textContent = label || '';
+            deleteModal.classList.add('active');
           });
         });
-      });
 
-      function clearSelection(unit) {
-        document.querySelectorAll(`.row-select[data-unit="${unit}"]`).forEach(input => {
-          input.checked = false;
+        const selectAllBoxes = document.querySelectorAll('.select-all');
+        selectAllBoxes.forEach(box => {
+          box.addEventListener('change', (e) => {
+            const unit = e.target.getAttribute('data-unit');
+            const isChecked = e.target.checked;
+            document.querySelectorAll(`.row-select[data-unit="${unit}"]`).forEach(input => {
+              input.checked = isChecked;
+            });
+          });
         });
-        const selectAll = document.querySelector(`.select-all[data-unit="${unit}"]`);
-        if (selectAll) {
-          selectAll.checked = false;
+
+        function clearSelection(unit) {
+          document.querySelectorAll(`.row-select[data-unit="${unit}"]`).forEach(input => {
+            input.checked = false;
+          });
+          const selectAll = document.querySelector(`.select-all[data-unit="${unit}"]`);
+          if (selectAll) {
+            selectAll.checked = false;
+          }
         }
-      }
 
-      function clearAllSelections() {
-        document.querySelectorAll('.row-select').forEach(input => {
-          input.checked = false;
-        });
-        document.querySelectorAll('.select-all').forEach(input => {
-          input.checked = false;
-        });
-      }
+        function clearAllSelections() {
+          document.querySelectorAll('.row-select').forEach(input => {
+            input.checked = false;
+          });
+          document.querySelectorAll('.select-all').forEach(input => {
+            input.checked = false;
+          });
+        }
 
-      attachDeleteListeners();
+        loadStaff();
+      })();
     </script>
     <script src="admin-nav.js"></script>
   </body>

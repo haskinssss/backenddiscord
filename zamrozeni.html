@@ -116,9 +116,14 @@
       <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
       (function () {
-        const storageKey = "emsFrozenOfficers";
+        const supabaseUrl = "https://kvpqhvcnlbaivyvzitpn.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cHFodmNubGJhaXZ5dnppdHBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2Njg4MTYsImV4cCI6MjA4NjI0NDgxNn0.CmZLNzklZEeqHZHwtM0Dy01fyvfJavSTGZv1T77XTX4";
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        const tableName = "ems_frozen_officers";
+
         const frozenBody = document.getElementById("frozenBody");
         const addFrozenBtn = document.getElementById("addFrozenBtn");
         const frozenModal = document.getElementById("frozenModal");
@@ -135,15 +140,22 @@
         const deleteCloseBtn = deleteModal.querySelector(".close-modal");
 
         let frozen = [];
-        let deleteIndex = null;
+        let deleteId = null;
 
-        function loadFrozen() {
-          const saved = localStorage.getItem(storageKey);
-          frozen = saved ? JSON.parse(saved) : [];
-        }
+        async function loadFrozen() {
+          const { data, error } = await supabaseClient
+            .from(tableName)
+            .select("id, name, rank, reason, freeze_date, created_at")
+            .order("created_at", { ascending: false });
 
-        function saveFrozen() {
-          localStorage.setItem(storageKey, JSON.stringify(frozen));
+          if (error) {
+            console.error("Supabase load error:", error);
+            alert("Błąd ładowania listy. Spróbuj ponownie.");
+            return;
+          }
+
+          frozen = data || [];
+          renderFrozen();
         }
 
         function renderFrozen() {
@@ -158,31 +170,31 @@
             return;
           }
 
-          frozen.forEach((officer, index) => {
+          frozen.forEach((officer) => {
             const row = document.createElement("tr");
             const cells = [
               officer.name,
               officer.rank,
               officer.reason,
-              officer.freezeDate
+              officer.freeze_date
             ];
             cells.forEach((text) => {
               const cell = document.createElement("td");
               cell.textContent = text || "-";
               row.appendChild(cell);
             });
-            
+
             const actionsCell = document.createElement("td");
             const deleteBtn = document.createElement("button");
             deleteBtn.className = "del-btn";
             deleteBtn.textContent = "Usuń";
-            deleteBtn.setAttribute("data-index", index);
+            deleteBtn.setAttribute("data-id", officer.id);
             actionsCell.appendChild(deleteBtn);
             row.appendChild(actionsCell);
-            
+
             frozenBody.appendChild(row);
           });
-          
+
           attachDeleteListeners();
         }
 
@@ -198,7 +210,7 @@
         function attachDeleteListeners() {
           document.querySelectorAll(".del-btn").forEach((btn) => {
             btn.addEventListener("click", (e) => {
-              deleteIndex = parseInt(e.target.getAttribute("data-index"));
+              deleteId = e.target.getAttribute("data-id");
               deleteModal.classList.add("active");
             });
           });
@@ -210,40 +222,56 @@
 
         deleteCloseBtn.addEventListener("click", () => {
           deleteModal.classList.remove("active");
-          deleteIndex = null;
+          deleteId = null;
         });
 
         cancelDeleteBtn.addEventListener("click", () => {
           deleteModal.classList.remove("active");
-          deleteIndex = null;
+          deleteId = null;
         });
 
-        confirmDeleteBtn.addEventListener("click", () => {
-          if (deleteIndex !== null) {
-            frozen.splice(deleteIndex, 1);
-            saveFrozen();
-            renderFrozen();
-            deleteModal.classList.remove("active");
-            deleteIndex = null;
+        confirmDeleteBtn.addEventListener("click", async () => {
+          if (!deleteId) {
+            return;
           }
+
+          const { error } = await supabaseClient
+            .from(tableName)
+            .delete()
+            .eq("id", deleteId);
+
+          if (error) {
+            console.error("Supabase delete error:", error);
+            alert("Błąd usuwania. Spróbuj ponownie.");
+            return;
+          }
+
+          deleteModal.classList.remove("active");
+          deleteId = null;
+          loadFrozen();
         });
 
-        frozenForm.addEventListener("submit", (event) => {
+        frozenForm.addEventListener("submit", async (event) => {
           event.preventDefault();
           const newOfficer = {
             name: nameInput.value.trim(),
             rank: rankInput.value.trim(),
             reason: reasonInput.value.trim(),
-            freezeDate: freezeDateInput.value
+            freeze_date: freezeDateInput.value
           };
-          frozen.unshift(newOfficer);
-          saveFrozen();
-          renderFrozen();
+
+          const { error } = await supabaseClient.from(tableName).insert([newOfficer]);
+          if (error) {
+            console.error("Supabase insert error:", error);
+            alert("Błąd zapisu. Spróbuj ponownie.");
+            return;
+          }
+
           closeModal();
+          loadFrozen();
         });
 
         loadFrozen();
-        renderFrozen();
       })();
     </script>
     <script src="admin-nav.js"></script>
