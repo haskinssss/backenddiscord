@@ -115,7 +115,7 @@ app.get('/auth/discord/callback', async (req, res) => {
         if (err) {
           return res.redirect('/login.html?error=session_error');
         }
-        res.redirect('/database.html');
+        res.redirect('/index.html');
       });
 
     } catch (guildError) {
@@ -139,51 +139,6 @@ app.get('/api/auth/status', (req, res) => {
   } else {
     res.json({ authenticated: false });
   }
-});
-
-app.post('/api/audit-logs', requireAuth, async (req, res) => {
-  if (!supabase) {
-    return res.status(500).json({ error: 'Supabase not configured' });
-  }
-
-  const { action, target, details } = req.body || {};
-  const entry = {
-    actor_id: req.session.user.id,
-    actor_name: req.session.user.username,
-    action: action || 'unknown',
-    target: target || null,
-    details: details || null
-  };
-
-  const { error } = await supabase.from('ems_audit_logs').insert([entry]);
-  if (error) {
-    console.error('Audit log insert error:', error.message);
-    return res.status(500).json({ error: 'Log write failed' });
-  }
-
-  return res.json({ success: true });
-});
-
-app.get('/api/audit-logs', requireAuth, async (req, res) => {
-  if (req.session.user.id !== ADMIN_DISCORD_ID) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  if (!supabase) {
-    return res.status(500).json({ error: 'Supabase not configured' });
-  }
-
-  const { data, error } = await supabase
-    .from('ems_audit_logs')
-    .select('id, actor_id, actor_name, action, target, details, created_at')
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  if (error) {
-    console.error('Audit log read error:', error.message);
-    return res.status(500).json({ error: 'Log read failed' });
-  }
-
-  return res.json({ logs: data || [] });
 });
 
 // Logout

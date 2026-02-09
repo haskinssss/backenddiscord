@@ -32,7 +32,7 @@
           <a href="database.html">Baza danych</a>
           <a href="kartoteka.html">Kartoteka wezwań</a>
           <a href="zamrozeni.html">Zamrożeni funkcjonariusze</a>
-          <a href="logs.html" class="admin-only">Logi kartoteki</a>
+
         </div>
       </details>
     </header>
@@ -67,31 +67,6 @@
               </tr>
             </thead>
             <tbody id="callLogBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="table-section" id="auditSection" hidden>
-        <div class="table-header">
-          <div>
-            <h2>Logi kartoteki</h2>
-            <p>Historia zmian w kartotece wezwań.</p>
-          </div>
-          <div class="table-actions">
-            <button class="btn-add-staff" id="refreshAuditLogs">Odśwież logi</button>
-          </div>
-        </div>
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Kto</th>
-                <th>Akcja</th>
-                <th>Szczegóły</th>
-              </tr>
-            </thead>
-            <tbody id="auditLogBody"></tbody>
           </table>
         </div>
       </section>
@@ -164,7 +139,6 @@
         const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cHFodmNubGJhaXZ5dnppdHBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2Njg4MTYsImV4cCI6MjA4NjI0NDgxNn0.CmZLNzklZEeqHZHwtM0Dy01fyvfJavSTGZv1T77XTX4";
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
         const tableName = "ems_call_log";
-        const adminDiscordId = "1150337681310625842";
 
         const callLogBody = document.getElementById("callLogBody");
         const addEntryBtn = document.getElementById("addEntryBtn");
@@ -182,13 +156,9 @@
         const confirmDeleteBtn = document.getElementById("confirmDelete");
         const cancelDeleteBtn = document.getElementById("cancelDelete");
         const deleteCloseBtn = deleteModal.querySelector(".close-modal");
-        const auditSection = document.getElementById("auditSection");
-        const auditLogBody = document.getElementById("auditLogBody");
-        const refreshAuditLogsBtn = document.getElementById("refreshAuditLogs");
 
         let entries = [];
         let deleteId = null;
-        let currentUser = null;
 
         function formatDateTime(value) {
           if (!value) {
@@ -221,73 +191,6 @@
 
           entries = data || [];
           renderEntries();
-        }
-
-        async function fetchAuthUser() {
-          try {
-            const response = await fetch("/api/auth/status");
-            const data = await response.json();
-            return data.authenticated ? data.user : null;
-          } catch (error) {
-            console.warn("Auth status error:", error);
-            return null;
-          }
-        }
-
-        async function logAction(action, target, details) {
-          try {
-            await fetch("/api/audit-logs", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action, target, details })
-            });
-          } catch (error) {
-            console.warn("Audit log error:", error);
-          }
-        }
-
-        function renderAuditLogs(logs) {
-          auditLogBody.innerHTML = "";
-          if (!logs.length) {
-            const row = document.createElement("tr");
-            const cell = document.createElement("td");
-            cell.colSpan = 4;
-            cell.textContent = "Brak logów do wyświetlenia.";
-            row.appendChild(cell);
-            auditLogBody.appendChild(row);
-            return;
-          }
-
-          logs.forEach((log) => {
-            const row = document.createElement("tr");
-
-            const dateCell = document.createElement("td");
-            dateCell.textContent = formatDateTime(log.created_at);
-            row.appendChild(dateCell);
-
-            const actorCell = document.createElement("td");
-            actorCell.textContent = log.actor_name || log.actor_id || "-";
-            row.appendChild(actorCell);
-
-            const actionCell = document.createElement("td");
-            actionCell.textContent = log.action || "-";
-            row.appendChild(actionCell);
-
-            const detailsCell = document.createElement("td");
-            detailsCell.textContent = log.details ? JSON.stringify(log.details) : "-";
-            row.appendChild(detailsCell);
-
-            auditLogBody.appendChild(row);
-          });
-        }
-
-        async function loadAuditLogs() {
-          const response = await fetch("/api/audit-logs");
-          if (!response.ok) {
-            return;
-          }
-          const data = await response.json();
-          renderAuditLogs(data.logs || []);
         }
 
         function renderEntries() {
@@ -399,13 +302,6 @@
 
           deleteModal.classList.remove("active");
           deleteId = null;
-          await logAction("delete", "ems_call_log", {
-            id: deletedId,
-            entry: entryToDelete || null
-          });
-          if (currentUser && currentUser.id === adminDiscordId) {
-            loadAuditLogs();
-          }
           loadEntries();
         });
 
@@ -431,29 +327,11 @@
             return;
           }
 
-          await logAction("insert", "ems_call_log", {
-            id: data ? data.id : null,
-            entry: newEntry
-          });
-          if (currentUser && currentUser.id === adminDiscordId) {
-            loadAuditLogs();
-          }
           closeModal();
           loadEntries();
         });
 
-        refreshAuditLogsBtn.addEventListener("click", () => {
-          loadAuditLogs();
-        });
-
-        (async () => {
-          currentUser = await fetchAuthUser();
-          if (currentUser && currentUser.id === adminDiscordId) {
-            auditSection.hidden = false;
-            loadAuditLogs();
-          }
-          loadEntries();
-        })();
+        loadEntries();
       })();
     </script>
     <script src="user-info.js"></script>
