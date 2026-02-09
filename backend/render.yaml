@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: ems-oauth
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "node server.js"
+    envVars:
+      - key: DISCORD_CLIENT_ID
+        value: 1470492952773136425
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_REDIRECT_URI
+        value: https://bazacommandems.onrender.com/auth/discord/callback
+      - key: GUILD_ID
+        value: 1066019542591082557
+      - key: REQUIRED_ROLE_ID
+        value: 1066019542922428545
+      - key: NODE_ENV
+        value: production

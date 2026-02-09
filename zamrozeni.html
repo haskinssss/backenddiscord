@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS | Zamrożeni funkcjonariusze</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="brand">
+        <img src="logo.png" alt="Command EMS" class="brand-logo" />
+        <span>Emergency Medical Services</span>
+      </div>
+      <details class="nav-dropdown">
+        <summary>Menu</summary>
+        <div class="dropdown-menu">
+          <a href="index.html">Strona główna</a>
+          <a href="database.html">Baza danych</a>
+          <a href="kartoteka.html">Kartoteka wezwań</a>
+          <a href="zamrozeni.html">Zamrożeni funkcjonariusze</a>
+        </div>
+      </details>
+    </header>
+
+    <main>
+      <section class="database-header">
+        <h1>Zamrożeni funkcjonariusze EMS</h1>
+        <p>Lista funkcjonariuszy z zamrożeniem aktywności.</p>
+      </section>
+
+      <section class="table-section active">
+        <div class="table-header">
+          <div>
+            <h2>Lista zamrożonych</h2>
+            <p>Funkcjonariusze tymczasowo zamrożeni w działaniach.</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn-add-staff" id="addFrozenBtn">Dodaj funkcjonariusza</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Imię i nazwisko</th>
+                <th>Stopień</th>
+                <th>Powód zamrożenia</th>
+                <th>Data zamrożenia</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody id="frozenBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="frozenModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Dodaj funkcjonariusza</h2>
+          <button class="close-modal" type="button" aria-label="Zamknij">&times;</button>
+        </div>
+        <form class="edit-form" id="frozenForm">
+          <div class="form-group">
+            <label for="name">Imię i nazwisko</label>
+            <input type="text" id="name" required />
+          </div>
+          <div class="form-group">
+            <label for="rank">Stopień</label>
+            <input type="text" id="rank" required />
+          </div>
+          <div class="form-group">
+            <label for="reason">Powód zamrożenia</label>
+            <input type="text" id="reason" required />
+          </div>
+          <div class="form-group">
+            <label for="freezeDate">Data zamrożenia</label>
+            <input type="date" id="freezeDate" required />
+          </div>
+          <div class="form-actions">
+            <button class="btn primary" type="submit">Zapisz</button>
+            <button class="btn ghost" type="button" id="cancelFrozen">Anuluj</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="deleteModal">
+      <div class="modal-content modal-confirm">
+        <div class="modal-header">
+          <h2>Potwierdź usunięcie</h2>
+          <button class="close-modal" type="button" aria-label="Zamknij">&times;</button>
+        </div>
+        <p>Czy na pewno chcesz usunąć tego funkcjonariusza z listy?</p>
+        <div class="form-actions">
+          <button class="btn danger" id="confirmDelete">Usuń</button>
+          <button class="btn ghost" id="cancelDelete">Anuluj</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div>
+        <strong>Zamrożeni funkcjonariusze</strong>
+      </div>
+      <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
+    </footer>
+
+    <script>
+      (function () {
+        const storageKey = "emsFrozenOfficers";
+        const frozenBody = document.getElementById("frozenBody");
+        const addFrozenBtn = document.getElementById("addFrozenBtn");
+        const frozenModal = document.getElementById("frozenModal");
+        const closeModalBtn = frozenModal.querySelector(".close-modal");
+        const cancelFrozenBtn = document.getElementById("cancelFrozen");
+        const frozenForm = document.getElementById("frozenForm");
+        const nameInput = document.getElementById("name");
+        const rankInput = document.getElementById("rank");
+        const reasonInput = document.getElementById("reason");
+        const freezeDateInput = document.getElementById("freezeDate");
+        const deleteModal = document.getElementById("deleteModal");
+        const confirmDeleteBtn = document.getElementById("confirmDelete");
+        const cancelDeleteBtn = document.getElementById("cancelDelete");
+        const deleteCloseBtn = deleteModal.querySelector(".close-modal");
+
+        let frozen = [];
+        let deleteIndex = null;
+
+        function loadFrozen() {
+          const saved = localStorage.getItem(storageKey);
+          frozen = saved ? JSON.parse(saved) : [];
+        }
+
+        function saveFrozen() {
+          localStorage.setItem(storageKey, JSON.stringify(frozen));
+        }
+
+        function renderFrozen() {
+          frozenBody.innerHTML = "";
+          if (frozen.length === 0) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 5;
+            cell.textContent = "Brak zamrożonych funkcjonariuszy.";
+            row.appendChild(cell);
+            frozenBody.appendChild(row);
+            return;
+          }
+
+          frozen.forEach((officer, index) => {
+            const row = document.createElement("tr");
+            const cells = [
+              officer.name,
+              officer.rank,
+              officer.reason,
+              officer.freezeDate
+            ];
+            cells.forEach((text) => {
+              const cell = document.createElement("td");
+              cell.textContent = text || "-";
+              row.appendChild(cell);
+            });
+            
+            const actionsCell = document.createElement("td");
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "del-btn";
+            deleteBtn.textContent = "Usuń";
+            deleteBtn.setAttribute("data-index", index);
+            actionsCell.appendChild(deleteBtn);
+            row.appendChild(actionsCell);
+            
+            frozenBody.appendChild(row);
+          });
+          
+          attachDeleteListeners();
+        }
+
+        function openModal() {
+          frozenModal.classList.add("active");
+        }
+
+        function closeModal() {
+          frozenModal.classList.remove("active");
+          frozenForm.reset();
+        }
+
+        function attachDeleteListeners() {
+          document.querySelectorAll(".del-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              deleteIndex = parseInt(e.target.getAttribute("data-index"));
+              deleteModal.classList.add("active");
+            });
+          });
+        }
+
+        addFrozenBtn.addEventListener("click", openModal);
+        closeModalBtn.addEventListener("click", closeModal);
+        cancelFrozenBtn.addEventListener("click", closeModal);
+
+        deleteCloseBtn.addEventListener("click", () => {
+          deleteModal.classList.remove("active");
+          deleteIndex = null;
+        });
+
+        cancelDeleteBtn.addEventListener("click", () => {
+          deleteModal.classList.remove("active");
+          deleteIndex = null;
+        });
+
+        confirmDeleteBtn.addEventListener("click", () => {
+          if (deleteIndex !== null) {
+            frozen.splice(deleteIndex, 1);
+            saveFrozen();
+            renderFrozen();
+            deleteModal.classList.remove("active");
+            deleteIndex = null;
+          }
+        });
+
+        frozenForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const newOfficer = {
+            name: nameInput.value.trim(),
+            rank: rankInput.value.trim(),
+            reason: reasonInput.value.trim(),
+            freezeDate: freezeDateInput.value
+          };
+          frozen.unshift(newOfficer);
+          saveFrozen();
+          renderFrozen();
+          closeModal();
+        });
+
+        loadFrozen();
+        renderFrozen();
+      })();
+    </script>
+  </body>
+</html>

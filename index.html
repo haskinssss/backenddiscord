@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS | Emergency Medical Services</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="brand">
+        <img src="logo.png" alt="Command EMS" class="brand-logo" />
+        <span>Emergency Medical Services</span>
+      </div>
+      <details class="nav-dropdown">
+        <summary>Menu</summary>
+        <div class="dropdown-menu">
+          <a href="index.html">Strona główna</a>
+          <a href="database.html">Baza danych</a>
+          <a href="kartoteka.html">Kartoteka wezwań</a>
+          <a href="zamrozeni.html">Zamrożeni funkcjonariusze</a>
+        </div>
+      </details>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Witam was w...</p>
+          <h1>Baza Commandowa EMS</h1>
+          <p class="lead">
+            <span class="rotating-text"></span>
+          </p>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card__header">
+            <span class="typing-badge" aria-live="polite">
+              <span class="typing-text"></span>
+              <span class="typing-cursor" aria-hidden="true">|</span>
+            </span>
+          </div>
+          <div class="hero-card__content">
+            <a class="status status-link status-cta" href="database.html">
+              <div>
+                <strong>Baza danych:</strong>
+                <span>Kliknij, aby przejść</span>
+              </div>
+            </a>
+            <a class="status status-link status-cta" href="kartoteka.html">
+              <div>
+                <strong>Kartoteka wezwań:</strong>
+                <span>Historia wezwań</span>
+              </div>
+            </a>
+            <a class="status status-link status-cta" href="zamrozeni.html">
+              <div>
+                <strong>Zamrożeni funkcjonariusze:</strong>
+                <span>Lista zamrożonych</span>
+              </div>
+            </a>
+          </div>
+          <div class="hero-card__footer">Aktualizacja: 09.02.2026, 19:42</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>Strona główna</strong>
+      </div>
+      <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
+    </footer>
+    <script>
+      (function () {
+        const phrases = [
+          "Witajcie, Command EMS",
+          "Gotowość 24/7",
+          "Centrum dowodzenia medycznego",
+          "Siema skurwysyny",
+          "Fajne macie dupy",
+        ];
+        const typingEl = document.querySelector(".typing-text");
+        if (!typingEl) {
+          return;
+        }
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+
+        function tick() {
+          const current = phrases[phraseIndex];
+          if (!isDeleting) {
+            charIndex += 1;
+            typingEl.textContent = current.slice(0, charIndex);
+            if (charIndex === current.length) {
+              isDeleting = true;
+              setTimeout(tick, 1200);
+              return;
+            }
+          } else {
+            charIndex -= 1;
+            typingEl.textContent = current.slice(0, charIndex);
+            if (charIndex === 0) {
+              isDeleting = false;
+              phraseIndex = (phraseIndex + 1) % phrases.length;
+            }
+          }
+
+          const speed = isDeleting ? 45 : 85;
+          setTimeout(tick, speed);
+        }
+
+        tick();
+      })();
+    </script>
+    <script>
+      (function () {
+        const greetings = [
+          "Miłej pracy w EMS!",
+          "Powodzenia dziś!",
+          "Jesteśmy dla Ciebie 24/7",
+          "Profesjonalizm w każdej akcji",
+          "Gotowi służyć społeczności",
+          "Razem ratujesz życia"
+        ];
+        const rotatingText = document.querySelector(".rotating-text");
+        if (!rotatingText) {
+          return;
+        }
+        let index = 0;
+
+        function changeText() {
+          rotatingText.style.opacity = "0";
+          setTimeout(() => {
+            rotatingText.textContent = greetings[index];
+            rotatingText.style.opacity = "1";
+            index = (index + 1) % greetings.length;
+          }, 800);
+        }
+
+        rotatingText.style.transition = "opacity 0.8s ease-in-out";
+        changeText();
+        setInterval(changeText, 4000);
+      })();
+    </script>
+  </body>
+</html>

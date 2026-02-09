@@ -1,0 +1,31 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="ems-logo">
+  <!-- Star of Life background -->
+  <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Horizontal bar -->
+    <line x1="50" y1="100" x2="150" y2="100"/>
+    <!-- Vertical bar -->
+    <line x1="100" y1="50" x2="100" y2="150"/>
+    <!-- Diagonal top-right -->
+    <line x1="129" y1="71" x2="150" y2="50"/>
+    <!-- Diagonal bottom-right -->
+    <line x1="129" y1="129" x2="150" y2="150"/>
+    <!-- Diagonal bottom-left -->
+    <line x1="71" y1="129" x2="50" y2="150"/>
+    <!-- Diagonal top-left -->
+    <line x1="71" y1="71" x2="50" y2="50"/>
+  </g>
+  
+  <!-- Medical caduceus in center -->
+  <g fill="currentColor" opacity="0.9">
+    <!-- Rod -->
+    <rect x="96" y="60" width="8" height="80" rx="4"/>
+    <!-- Left snake curve -->
+    <path d="M 92 70 Q 85 75 85 85 Q 85 95 92 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <!-- Right snake curve -->
+    <path d="M 108 70 Q 115 75 115 85 Q 115 95 108 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <!-- Left wings -->
+    <path d="M 85 78 L 70 70 M 85 78 L 70 86" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Right wings -->
+    <path d="M 115 78 L 130 70 M 115 78 L 130 86" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>

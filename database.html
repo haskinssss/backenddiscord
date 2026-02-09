@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS | Baza danych medyków</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="brand">
+        <img src="logo.png" alt="Command EMS" class="brand-logo" />
+        <span>Emergency Medical Services</span>
+      </div>
+      <details class="nav-dropdown">
+        <summary>Menu</summary>
+        <div class="dropdown-menu">
+          <a href="index.html">Strona główna</a>
+          <a href="database.html">Baza danych</a>
+          <a href="kartoteka.html">Kartoteka wezwań</a>
+          <a href="zamrozeni.html">Zamrożeni funkcjonariusze</a>
+        </div>
+      </details>
+    </header>
+
+    <main>
+      <section class="database-header">
+        <h1>Baza danych medyków EMS</h1>
+        <p>Wybierz jednostkę i przejrzyj listę personelu medycznego.</p>
+      </section>
+
+      <!-- Unit Tabs -->
+      <section class="unit-tabs">
+        <button class="tab-btn active" data-unit="hic">
+          <span class="tab-icon">🏥</span>
+          HIC - Hospital Intensive Care
+        </button>
+        <button class="tab-btn" data-unit="mr">
+          <span class="tab-icon">🚑</span>
+          MR - Medical Response
+        </button>
+        <button class="tab-btn" data-unit="intern">
+          <span class="tab-icon">🎓</span>
+          Praktykanci
+        </button>
+      </section>
+
+      <!-- HIC Table -->
+      <section class="table-section active" id="hic-section">
+        <div class="table-header">
+          <div>
+            <h2>Hospital Intensive Care - Personel</h2>
+            <p>Zespół zajmujący się pacjentami w szpitalu, wsparcie leczenia intensywnego</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn-add-staff" data-unit="hic">+ Dodaj pracownika</button>
+            <button class="btn-delete-selected" data-unit="hic">Usuń zaznaczonych</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Numer odznaki</th>
+                <th>Imię i nazwisko</th>
+                <th>Stopień</th>
+                <th>Specjalizacja</th>
+                <th>Akcje <input type="checkbox" class="select-all" data-unit="hic" aria-label="Zaznacz wszystkie" /></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>HIC001</td>
+                <td>Jan Kowalski</td>
+                <td>Lekarz Specjalista</td>
+                <td>Anestezjolog</td>
+                <td><button class="edit-btn" data-unit="hic" data-id="0">Edytuj</button><button class="del-btn" data-unit="hic" data-id="0">Usuń</button><input type="checkbox" class="row-select" data-unit="hic" data-id="0" /></td>
+              </tr>
+              <tr>
+                <td>HIC002</td>
+                <td>Maria Nowak</td>
+                <td>Pielęgniar Specjalistka</td>
+                <td>-</td>
+                <td><button class="edit-btn" data-unit="hic" data-id="1">Edytuj</button><button class="del-btn" data-unit="hic" data-id="1">Usuń</button><input type="checkbox" class="row-select" data-unit="hic" data-id="1" /></td>
+              </tr>
+              <tr>
+                <td>HIC003</td>
+                <td>Andrzej Dąbrowski</td>
+                <td>Lekarz Rezydent</td>
+                <td>-</td>
+                <td><button class="edit-btn" data-unit="hic" data-id="2">Edytuj</button><button class="del-btn" data-unit="hic" data-id="2">Usuń</button><input type="checkbox" class="row-select" data-unit="hic" data-id="2" /></td>
+              </tr>
+              <tr>
+                <td>HIC004</td>
+                <td>Ewa Wróblewska</td>
+                <td>Lekarz Specjalista</td>
+                <td>Respirolog</td>
+                <td><button class="edit-btn" data-unit="hic" data-id="3">Edytuj</button><button class="del-btn" data-unit="hic" data-id="3">Usuń</button><input type="checkbox" class="row-select" data-unit="hic" data-id="3" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MR Table -->
+      <section class="table-section" id="mr-section">
+        <div class="table-header">
+          <div>
+            <h2>Medical Response - Personel</h2>
+            <p>Zespół szybkiego reagowania na zdarzenia, pierwszy kontakt z pacjentem</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn-add-staff" data-unit="mr">+ Dodaj pracownika</button>
+            <button class="btn-delete-selected" data-unit="mr">Usuń zaznaczonych</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Numer odznaki</th>
+                <th>Imię i nazwisko</th>
+                <th>Stopień</th>
+                <th>Specjalizacja</th>
+                <th>Akcje <input type="checkbox" class="select-all" data-unit="mr" aria-label="Zaznacz wszystkie" /></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MR001</td>
+                <td>Piotr Lewandowski</td>
+                <td>Ratownik Medyczny EMT-P</td>
+                <td>Ratownictwo przedszpitalne</td>
+                <td><button class="edit-btn" data-unit="mr" data-id="0">Edytuj</button><button class="del-btn" data-unit="mr" data-id="0">Usuń</button><input type="checkbox" class="row-select" data-unit="mr" data-id="0" /></td>
+              </tr>
+              <tr>
+                <td>MR002</td>
+                <td>Krystyna Sicińska</td>
+                <td>Ratownik Medyczny</td>
+                <td>Transport medyczny</td>
+                <td><button class="edit-btn" data-unit="mr" data-id="1">Edytuj</button><button class="del-btn" data-unit="mr" data-id="1">Usuń</button><input type="checkbox" class="row-select" data-unit="mr" data-id="1" /></td>
+              </tr>
+              <tr>
+                <td>MR003</td>
+                <td>Tomasz Puchała</td>
+                <td>Ratownik Medyczny</td>
+                <td>Trauma</td>
+                <td><button class="edit-btn" data-unit="mr" data-id="2">Edytuj</button><button class="del-btn" data-unit="mr" data-id="2">Usuń</button><input type="checkbox" class="row-select" data-unit="mr" data-id="2" /></td>
+              </tr>
+              <tr>
+                <td>MR004</td>
+                <td>Joanna Zielińska</td>
+                <td>Kierowca Ratowniczy</td>
+                <td>Pierwsza pomoc</td>
+                <td><button class="edit-btn" data-unit="mr" data-id="3">Edytuj</button><button class="del-btn" data-unit="mr" data-id="3">Usuń</button><input type="checkbox" class="row-select" data-unit="mr" data-id="3" /></td>
+              </tr>
+              <tr>
+                <td>MR005</td>
+                <td>Mateusz Bednarz</td>
+                <td>Dispatcher Radiowy</td>
+                <td>Dyspozytornia</td>
+                <td><button class="edit-btn" data-unit="mr" data-id="4">Edytuj</button><button class="del-btn" data-unit="mr" data-id="4">Usuń</button><input type="checkbox" class="row-select" data-unit="mr" data-id="4" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Interns Table -->
+      <section class="table-section" id="intern-section">
+        <div class="table-header">
+          <div>
+            <h2>Praktykanci EMS</h2>
+            <p>Studenci na stażu - szkolenie w terenie i szpitalu</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn-add-staff" data-unit="intern">+ Dodaj pracownika</button>
+            <button class="btn-delete-selected" data-unit="intern">Usuń zaznaczonych</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Numer odznaki</th>
+                <th>Imię i nazwisko</th>
+                <th>Stopień</th>
+                <th>Specjalizacja</th>
+                <th>Akcje <input type="checkbox" class="select-all" data-unit="intern" aria-label="Zaznacz wszystkie" /></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>INT001</td>
+                <td>Anna Nowacka</td>
+                <td>Praktykantka</td>
+                <td>-</td>
+                <td><button class="edit-btn" data-unit="intern" data-id="0">Edytuj</button><button class="del-btn" data-unit="intern" data-id="0">Usuń</button><input type="checkbox" class="row-select" data-unit="intern" data-id="0" /></td>
+              </tr>
+              <tr>
+                <td>INT002</td>
+                <td>Karol Skowron</td>
+                <td>Praktykant</td>
+                <td>-</td>
+                <td><button class="edit-btn" data-unit="intern" data-id="1">Edytuj</button><button class="del-btn" data-unit="intern" data-id="1">Usuń</button><input type="checkbox" class="row-select" data-unit="intern" data-id="1" /></td>
+              </tr>
+              <tr>
+                <td>INT003</td>
+                <td>Magdalena Kosińska</td>
+                <td>Praktykantka</td>
+                <td>-</td>
+                <td><button class="edit-btn" data-unit="intern" data-id="2">Edytuj</button><button class="del-btn" data-unit="intern" data-id="2">Usuń</button><input type="checkbox" class="row-select" data-unit="intern" data-id="2" /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Edycja danych</h2>
+          <button class="close-modal">&times;</button>
+        </div>
+        <form class="edit-form" id="editForm">
+          <div class="form-group">
+            <label for="editBadge">Numer odznaki:</label>
+            <input type="text" id="editBadge" required />
+          </div>
+          <div class="form-group">
+            <label for="editName">Imię i nazwisko:</label>
+            <input type="text" id="editName" required />
+          </div>
+          <div class="form-group">
+            <label for="editRank">Stopień:</label>
+            <input type="text" id="editRank" required />
+          </div>
+          <div class="form-group">
+            <label for="editSpec">Specjalizacja:</label>
+            <input type="text" id="editSpec" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="submitBtn">Zapisz</button>
+            <button type="button" class="btn ghost close-modal">Anuluj</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+      <div class="modal-content modal-confirm">
+        <div class="modal-header">
+          <h2>Potwierdzenie usunięcia</h2>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Czy naprawdę chcesz usunąć <strong id="deleteConfirmName"></strong> z bazy danych?</p>
+          <p class="warning-text">Tej operacji nie będzie można cofnąć.</p>
+        </div>
+        <div class="form-actions">
+          <button id="confirmDeleteBtn" class="btn danger">Usuń</button>
+          <button class="btn ghost close-modal">Anuluj</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div>
+        <strong>Baza danych EMS</strong>
+      </div>
+      <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
+    </footer>
+
+    <script>
+      // Data storage with localStorage
+      const defaultStaffData = {
+        hic: [
+          { badge: 'HIC001', name: 'Jan Kowalski', rank: 'Lekarz Specjalista', spec: 'Anestezjolog' },
+          { badge: 'HIC002', name: 'Maria Nowak', rank: 'Pielęgniar Specjalistka', spec: '-' },
+          { badge: 'HIC003', name: 'Andrzej Dąbrowski', rank: 'Lekarz Rezydent', spec: '-' },
+          { badge: 'HIC004', name: 'Ewa Wróblewska', rank: 'Lekarz Specjalista', spec: 'Respirolog' }
+        ],
+        mr: [
+          { badge: 'MR001', name: 'Piotr Lewandowski', rank: 'Ratownik Medyczny EMT-P', spec: 'Ratownictwo przedszpitalne' },
+          { badge: 'MR002', name: 'Krystyna Sicińska', rank: 'Ratownik Medyczny', spec: 'Transport medyczny' },
+          { badge: 'MR003', name: 'Tomasz Puchała', rank: 'Ratownik Medyczny', spec: 'Trauma' },
+          { badge: 'MR004', name: 'Joanna Zielińska', rank: 'Kierowca Ratowniczy', spec: 'Pierwsza pomoc' },
+          { badge: 'MR005', name: 'Mateusz Bednarz', rank: 'Dispatcher Radiowy', spec: 'Dyspozytornia' }
+        ],
+        intern: [
+          { badge: 'INT001', name: 'Anna Nowacka', rank: 'Praktykantka', spec: '-' },
+          { badge: 'INT002', name: 'Karol Skowron', rank: 'Praktykant', spec: '-' },
+          { badge: 'INT003', name: 'Magdalena Kosińska', rank: 'Praktykantka', spec: '-' }
+        ]
+      };
+
+      // Załaduj dane z localStorage lub użyj domyślnych
+      let staffData = JSON.parse(localStorage.getItem('staffData')) || defaultStaffData;
+
+      // Funkcja do zapisywania danych w localStorage
+      function saveStaffData() {
+        localStorage.setItem('staffData', JSON.stringify(staffData));
+      }
+
+      let currentEditingUnit = null;
+      let currentEditingId = null;
+      let isAddingNew = false;
+
+      // Tab switching
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tableSections = document.querySelectorAll('.table-section');
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const unit = btn.getAttribute('data-unit');
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tableSections.forEach(s => s.classList.remove('active'));
+          clearAllSelections();
+          btn.classList.add('active');
+          document.getElementById(`${unit}-section`).classList.add('active');
+        });
+      });
+
+      // Modal and form elements
+      const modal = document.getElementById('editModal');
+      const deleteModal = document.getElementById('deleteModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const closeButtons = document.querySelectorAll('.close-modal');
+      const editForm = document.getElementById('editForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const addStaffBtns = document.querySelectorAll('.btn-add-staff');
+
+      // Add new staff button
+      addStaffBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          isAddingNew = true;
+          currentEditingUnit = e.target.getAttribute('data-unit');
+          currentEditingId = null;
+          
+          modalTitle.textContent = 'Dodaj nowego pracownika';
+          submitBtn.textContent = 'Dodaj';
+          
+          document.getElementById('editBadge').value = '';
+          document.getElementById('editName').value = '';
+          document.getElementById('editRank').value = '';
+          document.getElementById('editSpec').value = '';
+          
+          modal.classList.add('active');
+        });
+      });
+
+      // Edit button listeners
+      function attachEditListeners() {
+        const editBtns = document.querySelectorAll('.edit-btn');
+        editBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            isAddingNew = false;
+            currentEditingUnit = e.target.getAttribute('data-unit');
+            currentEditingId = parseInt(e.target.getAttribute('data-id'));
+            const data = staffData[currentEditingUnit][currentEditingId];
+            
+            modalTitle.textContent = 'Edycja danych';
+            submitBtn.textContent = 'Zapisz';
+            
+            document.getElementById('editBadge').value = data.badge;
+            document.getElementById('editName').value = data.name;
+            document.getElementById('editRank').value = data.rank;
+            document.getElementById('editSpec').value = data.spec;
+            
+            modal.classList.add('active');
+          });
+        });
+      }
+
+      attachEditListeners();
+
+      // Close modal
+      closeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          modal.classList.remove('active');
+          deleteModal.classList.remove('active');
+          clearAllSelections();
+        });
+      });
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+
+      deleteModal.addEventListener('click', (e) => {
+        if (e.target === deleteModal) {
+          deleteModal.classList.remove('active');
+          clearAllSelections();
+        }
+      });
+
+      // Form submission
+      editForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const newData = {
+          badge: document.getElementById('editBadge').value,
+          name: document.getElementById('editName').value,
+          rank: document.getElementById('editRank').value,
+          spec: document.getElementById('editSpec').value
+        };
+
+        if (isAddingNew) {
+          staffData[currentEditingUnit].push(newData);
+        } else {
+          staffData[currentEditingUnit][currentEditingId] = newData;
+        }
+
+        saveStaffData();
+        updateTable(currentEditingUnit);
+        modal.classList.remove('active');
+        attachEditListeners();
+      });
+
+      function updateTable(unit) {
+        const section = document.getElementById(`${unit}-section`);
+        const tbody = section.querySelector('tbody');
+        const data = staffData[unit];
+
+        tbody.innerHTML = '';
+        data.forEach((row, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.badge}</td>
+            <td>${row.name}</td>
+            <td>${row.rank}</td>
+            <td>${row.spec}</td>
+            <td><button class="edit-btn" data-unit="${unit}" data-id="${idx}">Edytuj</button><button class="del-btn" data-unit="${unit}" data-id="${idx}">Usuń</button><input type="checkbox" class="row-select" data-unit="${unit}" data-id="${idx}" /></td>
+          `;
+          tbody.appendChild(tr);
+        });
+        attachEditListeners();
+        attachDeleteListeners();
+        clearSelection(unit);
+      }
+
+      // Initial render from storage
+      ['hic', 'mr', 'intern'].forEach(unit => updateTable(unit));
+
+      // Delete functionality
+      const deleteConfirmBtn = document.getElementById('confirmDeleteBtn');
+      let deleteUnit = null;
+      let deleteId = null;
+      let deleteIds = null;
+
+      function attachDeleteListeners() {
+        const delBtns = document.querySelectorAll('.del-btn');
+        delBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            deleteUnit = e.target.getAttribute('data-unit');
+            deleteId = parseInt(e.target.getAttribute('data-id'));
+            deleteIds = null;
+            const staffMember = staffData[deleteUnit][deleteId];
+            
+            document.getElementById('deleteConfirmName').textContent = staffMember.name;
+            deleteModal.classList.add('active');
+          });
+        });
+      }
+
+      deleteConfirmBtn.addEventListener('click', () => {
+        if (deleteIds && deleteIds.length > 0) {
+          deleteIds.sort((a, b) => b - a).forEach(id => {
+            staffData[deleteUnit].splice(id, 1);
+          });
+        } else {
+          staffData[deleteUnit].splice(deleteId, 1);
+        }
+        deleteIds = null;
+        saveStaffData();
+        updateTable(deleteUnit);
+        clearSelection(deleteUnit);
+        deleteModal.classList.remove('active');
+      });
+
+      const bulkDeleteButtons = document.querySelectorAll('.btn-delete-selected');
+      bulkDeleteButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const unit = e.target.getAttribute('data-unit');
+          const selected = Array.from(document.querySelectorAll(`.row-select[data-unit="${unit}"]:checked`))
+            .map(input => parseInt(input.getAttribute('data-id')));
+
+          if (selected.length === 0) {
+            return;
+          }
+
+          deleteUnit = unit;
+          deleteIds = selected;
+          deleteId = null;
+
+          const label = selected.length === 1
+            ? staffData[unit][selected[0]].name
+            : `zaznaczonych pracowników (${selected.length})`;
+
+          document.getElementById('deleteConfirmName').textContent = label;
+          deleteModal.classList.add('active');
+        });
+      });
+
+      const selectAllBoxes = document.querySelectorAll('.select-all');
+      selectAllBoxes.forEach(box => {
+        box.addEventListener('change', (e) => {
+          const unit = e.target.getAttribute('data-unit');
+          const isChecked = e.target.checked;
+          document.querySelectorAll(`.row-select[data-unit="${unit}"]`).forEach(input => {
+            input.checked = isChecked;
+          });
+        });
+      });
+
+      function clearSelection(unit) {
+        document.querySelectorAll(`.row-select[data-unit="${unit}"]`).forEach(input => {
+          input.checked = false;
+        });
+        const selectAll = document.querySelector(`.select-all[data-unit="${unit}"]`);
+        if (selectAll) {
+          selectAll.checked = false;
+        }
+      }
+
+      function clearAllSelections() {
+        document.querySelectorAll('.row-select').forEach(input => {
+          input.checked = false;
+        });
+        document.querySelectorAll('.select-all').forEach(input => {
+          input.checked = false;
+        });
+      }
+
+      attachDeleteListeners();
+    </script>
+  </body>
+</html>

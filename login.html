@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS | Logowanie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0b1218;
+        --bg-2: #111c24;
+        --accent: #DC143C;
+        --accent-2: #FF6B6B;
+        --text: #f2f4f7;
+        --muted: #b8c1cc;
+        --border: rgba(255, 255, 255, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Manrope", sans-serif;
+        background: radial-gradient(circle at 20% 20%, rgba(220, 20, 60, 0.25), transparent 55%),
+          radial-gradient(circle at 80% 0%, rgba(255, 107, 107, 0.15), transparent 45%),
+          var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .login-container {
+        background: var(--bg-2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 48px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
+
+      .logo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 32px;
+      }
+
+      .logo img {
+        width: 100%;
+        height: auto;
+      }
+
+      h1 {
+        font-family: "Fraunces", serif;
+        font-size: 36px;
+        letter-spacing: 1px;
+        margin-bottom: 16px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 14px;
+        margin-bottom: 32px;
+      }
+
+      .login-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #5865F2, #7289DA);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 5px 15px rgba(88, 101, 242, 0.3);
+      }
+
+      .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(88, 101, 242, 0.5);
+      }
+
+      .discord-icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      .error {
+        background: rgba(255, 65, 65, 0.15);
+        border: 1px solid rgba(255, 65, 65, 0.3);
+        color: #ff8080;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        font-size: 13px;
+      }
+
+      .error.hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="logo">
+        <img src="logo.png" alt="Command EMS" />
+      </div>
+      <h1>Baza Commandowa EMS</h1>
+      <p class="subtitle">Zaloguj się przez Discord, aby uzyskać dostęp</p>
+      
+      <div id="errorMsg" class="error hidden"></div>
+
+      <a href="/auth/discord/login" class="login-btn">
+        <svg class="discord-icon" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+          <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0A105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a77.15,77.15,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.73,105.73,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60.55,31,53.88s5-11.85,11.45-11.85S53.9,47.21,53.9,53.88,48.7,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60.55,73.25,53.88s5-11.85,11.44-11.85S96.14,47.21,96.14,53.88,90.94,65.69,84.69,65.69Z"/>
+        </svg>
+        Zaloguj się Discord
+      </a>
+
+      <p class="subtitle" style="margin-top: 32px; font-size: 12px;">
+        Musisz mieć rolę na serwerze Command EMS, aby uzyskać dostęp
+      </p>
+    </div>
+
+    <script>
+      // Check for error in URL
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get('error');
+      const errorMsg = document.getElementById('errorMsg');
+
+      if (error) {
+        errorMsg.classList.remove('hidden');
+        switch(error) {
+          case 'no_role':
+            errorMsg.textContent = '❌ Nie masz wymaganej roli na serwerze';
+            break;
+          case 'not_in_guild':
+            errorMsg.textContent = '❌ Nie jesteś członkiem serwera Command EMS';
+            break;
+          case 'auth_failed':
+            errorMsg.textContent = '❌ Błąd autoryzacji Discord';
+            break;
+          case 'no_code':
+            errorMsg.textContent = '❌ Brak kodu autoryzacji';
+            break;
+          default:
+            errorMsg.textContent = '❌ Błąd logowania, spróbuj ponownie';
+        }
+      }
+
+      // Check if already logged in
+      fetch('/api/auth/status')
+        .then(r => r.json())
+        .then(data => {
+          if (data.authenticated) {
+            window.location.href = '/index.html';
+          }
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS | Kartoteka wezwań</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="brand">
+        <img src="logo.png" alt="Command EMS" class="brand-logo" />
+        <span>Emergency Medical Services</span>
+      </div>
+      <details class="nav-dropdown">
+        <summary>Menu</summary>
+        <div class="dropdown-menu">
+          <a href="index.html">Strona główna</a>
+          <a href="database.html">Baza danych</a>
+          <a href="kartoteka.html">Kartoteka wezwań</a>
+          <a href="zamrozeni.html">Zamrożeni funkcjonariusze</a>
+        </div>
+      </details>
+    </header>
+
+    <main>
+      <section class="database-header">
+        <h1>Kartoteka wezwań EMS</h1>
+        <p>Dodawaj wpisy i prowadź historię rozmów oraz działań.</p>
+      </section>
+
+      <section class="table-section active">
+        <div class="table-header">
+          <div>
+            <h2>Wpisy wezwań</h2>
+            <p>Historia zgłoszeń oraz ich szczegóły.</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn-add-staff" id="addEntryBtn">Dodaj wpis wezwania</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Kto wezwał</th>
+                <th>Kto został wezwany</th>
+                <th>Za co + krótki opis</th>
+                <th>Kto towarzyszył przy rozmowie</th>
+                <th>Data i godzina wezwania</th>
+                <th>Materiały</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody id="callLogBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="entryModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Dodaj wpis wezwania</h2>
+          <button class="close-modal" type="button" aria-label="Zamknij">&times;</button>
+        </div>
+        <form class="edit-form" id="entryForm">
+          <div class="form-group">
+            <label for="caller">Kto wezwał</label>
+            <input type="text" id="caller" required />
+          </div>
+          <div class="form-group">
+            <label for="called">Kto został wezwany</label>
+            <input type="text" id="called" required />
+          </div>
+          <div class="form-group">
+            <label for="reason">Za co został i krótki opis</label>
+            <input type="text" id="reason" required />
+          </div>
+          <div class="form-group">
+            <label for="witness">Kto towarzyszył przy rozmowie</label>
+            <input type="text" id="witness" required />
+          </div>
+          <div class="form-group">
+            <label for="datetime">Data wezwania oraz godzina</label>
+            <input type="datetime-local" id="datetime" required />
+          </div>
+          <div class="form-group">
+            <label for="materials">Link do nagrania/zdjęcia (opcjonalne)</label>
+            <input type="url" id="materials" placeholder="https://..." />
+          </div>
+          <div class="form-actions">
+            <button class="btn primary" type="submit">Zapisz wpis</button>
+            <button class="btn ghost" type="button" id="cancelEntry">Anuluj</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" id="deleteModal">
+      <div class="modal-content modal-confirm">
+        <div class="modal-header">
+          <h2>Potwierdź usunięcie</h2>
+          <button class="close-modal" type="button" aria-label="Zamknij">&times;</button>
+        </div>
+        <p>Czy na pewno chcesz usunąć wpis wezwania?</p>
+        <div class="form-actions">
+          <button class="btn danger" id="confirmDelete">Usuń</button>
+          <button class="btn ghost" id="cancelDelete">Anuluj</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div>
+        <strong>Kartoteka wezwań</strong>
+      </div>
+      <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
+    </footer>
+
+    <script>
+      (function () {
+        const storageKey = "emsCallLog";
+        const callLogBody = document.getElementById("callLogBody");
+        const addEntryBtn = document.getElementById("addEntryBtn");
+        const entryModal = document.getElementById("entryModal");
+        const closeModalBtn = entryModal.querySelector(".close-modal");
+        const cancelEntryBtn = document.getElementById("cancelEntry");
+        const entryForm = document.getElementById("entryForm");
+        const callerInput = document.getElementById("caller");
+        const calledInput = document.getElementById("called");
+        const reasonInput = document.getElementById("reason");
+        const witnessInput = document.getElementById("witness");
+        const datetimeInput = document.getElementById("datetime");
+        const materialsInput = document.getElementById("materials");
+        const deleteModal = document.getElementById("deleteModal");
+        const confirmDeleteBtn = document.getElementById("confirmDelete");
+        const cancelDeleteBtn = document.getElementById("cancelDelete");
+        const deleteCloseBtn = deleteModal.querySelector(".close-modal");
+
+        let entries = [];
+        let deleteIndex = null;
+
+        function loadEntries() {
+          const saved = localStorage.getItem(storageKey);
+          entries = saved ? JSON.parse(saved) : [];
+        }
+
+        function saveEntries() {
+          localStorage.setItem(storageKey, JSON.stringify(entries));
+        }
+
+        function formatDateTime(value) {
+          if (!value) {
+            return "-";
+          }
+          const [datePart, timePart] = value.split("T");
+          return timePart ? `${datePart} ${timePart}` : value;
+        }
+
+        function renderEntries() {
+          callLogBody.innerHTML = "";
+          if (entries.length === 0) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 7;
+            cell.textContent = "Brak wpisów. Dodaj pierwszy wpis wezwania.";
+            row.appendChild(cell);
+            callLogBody.appendChild(row);
+            return;
+          }
+
+          entries.forEach((entry, index) => {
+            const row = document.createElement("tr");
+            const cells = [
+              entry.caller,
+              entry.called,
+              entry.reason,
+              entry.witness,
+              formatDateTime(entry.datetime)
+            ];
+            cells.forEach((text) => {
+              const cell = document.createElement("td");
+              cell.textContent = text || "-";
+              row.appendChild(cell);
+            });
+            
+            const materialsCell = document.createElement("td");
+            if (entry.materials) {
+              const link = document.createElement("a");
+              link.href = entry.materials;
+              link.textContent = "Zobacz";
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              link.style.color = "var(--accent)";
+              link.style.textDecoration = "underline";
+              materialsCell.appendChild(link);
+            } else {
+              materialsCell.textContent = "-";
+            }
+            row.appendChild(materialsCell);
+            
+            const actionsCell = document.createElement("td");
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "del-btn";
+            deleteBtn.textContent = "Usuń";
+            deleteBtn.setAttribute("data-index", index);
+            actionsCell.appendChild(deleteBtn);
+            row.appendChild(actionsCell);
+            
+            callLogBody.appendChild(row);
+          });
+          
+          attachDeleteListeners();
+        }
+
+        function openModal() {
+          entryModal.classList.add("active");
+        }
+
+        function closeModal() {
+          entryModal.classList.remove("active");
+          entryForm.reset();
+        }
+
+        function attachDeleteListeners() {
+          document.querySelectorAll(".del-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              deleteIndex = parseInt(e.target.getAttribute("data-index"));
+              deleteModal.classList.add("active");
+            });
+          });
+        }
+
+        addEntryBtn.addEventListener("click", openModal);
+        closeModalBtn.addEventListener("click", closeModal);
+        cancelEntryBtn.addEventListener("click", closeModal);
+
+        deleteCloseBtn.addEventListener("click", () => {
+          deleteModal.classList.remove("active");
+          deleteIndex = null;
+        });
+
+        cancelDeleteBtn.addEventListener("click", () => {
+          deleteModal.classList.remove("active");
+          deleteIndex = null;
+        });
+
+        confirmDeleteBtn.addEventListener("click", () => {
+          if (deleteIndex !== null) {
+            entries.splice(deleteIndex, 1);
+            saveEntries();
+            renderEntries();
+            deleteModal.classList.remove("active");
+            deleteIndex = null;
+          }
+        });
+
+        entryForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const newEntry = {
+            caller: callerInput.value.trim(),
+            called: calledInput.value.trim(),
+            reason: reasonInput.value.trim(),
+            witness: witnessInput.value.trim(),
+            datetime: datetimeInput.value,
+            materials: materialsInput.value.trim() || null
+          };
+          entries.unshift(newEntry);
+          saveEntries();
+          renderEntries();
+          closeModal();
+        });
+
+        loadEntries();
+        renderEntries();
+      })();
+    </script>
+  </body>
+</html>
