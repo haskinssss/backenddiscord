@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EMS | Zamrożeni funkcjonariusze</title>
+    <link rel="icon" href="logo.png" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -19,6 +20,11 @@
         <img src="logo.png" alt="Command EMS" class="brand-logo" />
         <span>Emergency Medical Services</span>
       </a>
+      <div class="user-info" aria-live="polite">
+        <img class="user-avatar" alt="" hidden />
+        <span class="user-label">Zalogowano jako:</span>
+        <span class="user-name">-</span>
+      </div>
       <details class="nav-dropdown">
         <summary>Menu</summary>
         <div class="dropdown-menu">
@@ -113,7 +119,7 @@
       <div>
         <strong>Zamrożeni funkcjonariusze</strong>
       </div>
-      <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
+      <div class="footer-note">Made by Haskins. Ostatnia aktualizacja: 09.02.2026, 23:10.</div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -274,6 +280,7 @@
         loadFrozen();
       })();
     </script>
+    <script src="user-info.js"></script>
     <script src="admin-nav.js"></script>
   </body>
 </html>
