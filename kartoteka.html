@@ -26,6 +26,7 @@
           <a href="database.html">Baza danych</a>
           <a href="kartoteka.html">Kartoteka wezwań</a>
           <a href="zamrozeni.html">Zamrożeni funkcjonariusze</a>
+          <a href="logs.html" class="admin-only">Logi kartoteki</a>
         </div>
       </details>
     </header>
@@ -60,6 +61,31 @@
               </tr>
             </thead>
             <tbody id="callLogBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="table-section" id="auditSection" hidden>
+        <div class="table-header">
+          <div>
+            <h2>Logi kartoteki</h2>
+            <p>Historia zmian w kartotece wezwań.</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn-add-staff" id="refreshAuditLogs">Odśwież logi</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Kto</th>
+                <th>Akcja</th>
+                <th>Szczegóły</th>
+              </tr>
+            </thead>
+            <tbody id="auditLogBody"></tbody>
           </table>
         </div>
       </section>
@@ -125,9 +151,15 @@
       <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
       (function () {
-        const storageKey = "emsCallLog";
+        const supabaseUrl = "https://kvpqhvcnlbaivyvzitpn.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cHFodmNubGJhaXZ5dnppdHBuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2Njg4MTYsImV4cCI6MjA4NjI0NDgxNn0.CmZLNzklZEeqHZHwtM0Dy01fyvfJavSTGZv1T77XTX4";
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        const tableName = "ems_call_log";
+        const adminDiscordId = "1150337681310625842";
+
         const callLogBody = document.getElementById("callLogBody");
         const addEntryBtn = document.getElementById("addEntryBtn");
         const entryModal = document.getElementById("entryModal");
@@ -144,25 +176,112 @@
         const confirmDeleteBtn = document.getElementById("confirmDelete");
         const cancelDeleteBtn = document.getElementById("cancelDelete");
         const deleteCloseBtn = deleteModal.querySelector(".close-modal");
+        const auditSection = document.getElementById("auditSection");
+        const auditLogBody = document.getElementById("auditLogBody");
+        const refreshAuditLogsBtn = document.getElementById("refreshAuditLogs");
 
         let entries = [];
-        let deleteIndex = null;
-
-        function loadEntries() {
-          const saved = localStorage.getItem(storageKey);
-          entries = saved ? JSON.parse(saved) : [];
-        }
-
-        function saveEntries() {
-          localStorage.setItem(storageKey, JSON.stringify(entries));
-        }
+        let deleteId = null;
+        let currentUser = null;
 
         function formatDateTime(value) {
           if (!value) {
             return "-";
           }
-          const [datePart, timePart] = value.split("T");
-          return timePart ? `${datePart} ${timePart}` : value;
+          if (typeof value === "string") {
+            const [datePart, timePart] = value.split("T");
+            if (timePart) {
+              return `${datePart} ${timePart.slice(0, 5)}`;
+            }
+          }
+          const date = new Date(value);
+          if (!Number.isNaN(date.getTime())) {
+            return date.toISOString().slice(0, 16).replace("T", " ");
+          }
+          return String(value);
+        }
+
+        async function loadEntries() {
+          const { data, error } = await supabaseClient
+            .from(tableName)
+            .select("id, caller, called, reason, witness, datetime, materials, created_at")
+            .order("created_at", { ascending: false });
+
+          if (error) {
+            console.error("Supabase load error:", error);
+            alert("Błąd ładowania kartoteki. Spróbuj ponownie za chwilę.");
+            return;
+          }
+
+          entries = data || [];
+          renderEntries();
+        }
+
+        async function fetchAuthUser() {
+          try {
+            const response = await fetch("/api/auth/status");
+            const data = await response.json();
+            return data.authenticated ? data.user : null;
+          } catch (error) {
+            console.warn("Auth status error:", error);
+            return null;
+          }
+        }
+
+        async function logAction(action, target, details) {
+          try {
+            await fetch("/api/audit-logs", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action, target, details })
+            });
+          } catch (error) {
+            console.warn("Audit log error:", error);
+          }
+        }
+
+        function renderAuditLogs(logs) {
+          auditLogBody.innerHTML = "";
+          if (!logs.length) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 4;
+            cell.textContent = "Brak logów do wyświetlenia.";
+            row.appendChild(cell);
+            auditLogBody.appendChild(row);
+            return;
+          }
+
+          logs.forEach((log) => {
+            const row = document.createElement("tr");
+
+            const dateCell = document.createElement("td");
+            dateCell.textContent = formatDateTime(log.created_at);
+            row.appendChild(dateCell);
+
+            const actorCell = document.createElement("td");
+            actorCell.textContent = log.actor_name || log.actor_id || "-";
+            row.appendChild(actorCell);
+
+            const actionCell = document.createElement("td");
+            actionCell.textContent = log.action || "-";
+            row.appendChild(actionCell);
+
+            const detailsCell = document.createElement("td");
+            detailsCell.textContent = log.details ? JSON.stringify(log.details) : "-";
+            row.appendChild(detailsCell);
+
+            auditLogBody.appendChild(row);
+          });
+        }
+
+        async function loadAuditLogs() {
+          const response = await fetch("/api/audit-logs");
+          if (!response.ok) {
+            return;
+          }
+          const data = await response.json();
+          renderAuditLogs(data.logs || []);
         }
 
         function renderEntries() {
@@ -177,7 +296,7 @@
             return;
           }
 
-          entries.forEach((entry, index) => {
+          entries.forEach((entry) => {
             const row = document.createElement("tr");
             const cells = [
               entry.caller,
@@ -191,7 +310,7 @@
               cell.textContent = text || "-";
               row.appendChild(cell);
             });
-            
+
             const materialsCell = document.createElement("td");
             if (entry.materials) {
               const link = document.createElement("a");
@@ -206,18 +325,18 @@
               materialsCell.textContent = "-";
             }
             row.appendChild(materialsCell);
-            
+
             const actionsCell = document.createElement("td");
             const deleteBtn = document.createElement("button");
             deleteBtn.className = "del-btn";
             deleteBtn.textContent = "Usuń";
-            deleteBtn.setAttribute("data-index", index);
+            deleteBtn.setAttribute("data-id", entry.id);
             actionsCell.appendChild(deleteBtn);
             row.appendChild(actionsCell);
-            
+
             callLogBody.appendChild(row);
           });
-          
+
           attachDeleteListeners();
         }
 
@@ -233,7 +352,7 @@
         function attachDeleteListeners() {
           document.querySelectorAll(".del-btn").forEach((btn) => {
             btn.addEventListener("click", (e) => {
-              deleteIndex = parseInt(e.target.getAttribute("data-index"));
+              deleteId = e.target.getAttribute("data-id");
               deleteModal.classList.add("active");
             });
           });
@@ -245,25 +364,46 @@
 
         deleteCloseBtn.addEventListener("click", () => {
           deleteModal.classList.remove("active");
-          deleteIndex = null;
+          deleteId = null;
         });
 
         cancelDeleteBtn.addEventListener("click", () => {
           deleteModal.classList.remove("active");
-          deleteIndex = null;
+          deleteId = null;
         });
 
-        confirmDeleteBtn.addEventListener("click", () => {
-          if (deleteIndex !== null) {
-            entries.splice(deleteIndex, 1);
-            saveEntries();
-            renderEntries();
-            deleteModal.classList.remove("active");
-            deleteIndex = null;
+        confirmDeleteBtn.addEventListener("click", async () => {
+          if (!deleteId) {
+            return;
           }
+
+          const deletedId = deleteId;
+          const entryToDelete = entries.find((entry) => String(entry.id) === String(deleteId));
+
+          const { error } = await supabaseClient
+            .from(tableName)
+            .delete()
+            .eq("id", deleteId);
+
+          if (error) {
+            console.error("Supabase delete error:", error);
+            alert("Błąd podczas usuwania wpisu. Spróbuj ponownie.");
+            return;
+          }
+
+          deleteModal.classList.remove("active");
+          deleteId = null;
+          await logAction("delete", "ems_call_log", {
+            id: deletedId,
+            entry: entryToDelete || null
+          });
+          if (currentUser && currentUser.id === adminDiscordId) {
+            loadAuditLogs();
+          }
+          loadEntries();
         });
 
-        entryForm.addEventListener("submit", (event) => {
+        entryForm.addEventListener("submit", async (event) => {
           event.preventDefault();
           const newEntry = {
             caller: callerInput.value.trim(),
@@ -273,15 +413,43 @@
             datetime: datetimeInput.value,
             materials: materialsInput.value.trim() || null
           };
-          entries.unshift(newEntry);
-          saveEntries();
-          renderEntries();
+
+          const { data, error } = await supabaseClient
+            .from(tableName)
+            .insert([newEntry])
+            .select("id")
+            .single();
+          if (error) {
+            console.error("Supabase insert error:", error);
+            alert("Błąd zapisu. Spróbuj ponownie.");
+            return;
+          }
+
+          await logAction("insert", "ems_call_log", {
+            id: data ? data.id : null,
+            entry: newEntry
+          });
+          if (currentUser && currentUser.id === adminDiscordId) {
+            loadAuditLogs();
+          }
           closeModal();
+          loadEntries();
         });
 
-        loadEntries();
-        renderEntries();
+        refreshAuditLogsBtn.addEventListener("click", () => {
+          loadAuditLogs();
+        });
+
+        (async () => {
+          currentUser = await fetchAuthUser();
+          if (currentUser && currentUser.id === adminDiscordId) {
+            auditSection.hidden = false;
+            loadAuditLogs();
+          }
+          loadEntries();
+        })();
       })();
     </script>
+    <script src="admin-nav.js"></script>
   </body>
 </html>

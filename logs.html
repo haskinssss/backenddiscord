@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS | Logi kartoteki</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <div class="brand">
+        <img src="logo.png" alt="Command EMS" class="brand-logo" />
+        <span>Emergency Medical Services</span>
+      </div>
+      <details class="nav-dropdown">
+        <summary>Menu</summary>
+        <div class="dropdown-menu">
+          <a href="index.html">Strona główna</a>
+          <a href="database.html">Baza danych</a>
+          <a href="kartoteka.html">Kartoteka wezwań</a>
+          <a href="zamrozeni.html">Zamrożeni funkcjonariusze</a>
+          <a href="logs.html" class="admin-only">Logi kartoteki</a>
+        </div>
+      </details>
+    </header>
+
+    <main>
+      <section class="database-header">
+        <h1>Logi kartoteki wezwań</h1>
+        <p>Podgląd zmian w kartotece EMS (tylko dla uprawnionych).</p>
+      </section>
+
+      <section class="table-section active">
+        <div class="table-header">
+          <div>
+            <h2>Historia zmian</h2>
+            <p>Ostatnie operacje dodawania i usuwania wpisów.</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn-add-staff" id="refreshLogs">Odśwież</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Kto</th>
+                <th>Akcja</th>
+                <th>Szczegóły</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>Logi kartoteki</strong>
+      </div>
+      <div class="footer-note">Wszelkie prawa zastrzeżone. 2026.</div>
+    </footer>
+
+    <script src="admin-nav.js"></script>
+    <script>
+      (function () {
+        const adminDiscordId = "1150337681310625842";
+        const logsBody = document.getElementById("logsBody");
+        const refreshBtn = document.getElementById("refreshLogs");
+
+        function formatDateTime(value) {
+          if (!value) {
+            return "-";
+          }
+          if (typeof value === "string") {
+            const [datePart, timePart] = value.split("T");
+            if (timePart) {
+              return `${datePart} ${timePart.slice(0, 5)}`;
+            }
+          }
+          const date = new Date(value);
+          if (!Number.isNaN(date.getTime())) {
+            return date.toISOString().slice(0, 16).replace("T", " ");
+          }
+          return String(value);
+        }
+
+        function renderLogs(logs) {
+          logsBody.innerHTML = "";
+          if (!logs.length) {
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 4;
+            cell.textContent = "Brak logów do wyświetlenia.";
+            row.appendChild(cell);
+            logsBody.appendChild(row);
+            return;
+          }
+
+          logs.forEach((log) => {
+            const row = document.createElement("tr");
+
+            const dateCell = document.createElement("td");
+            dateCell.textContent = formatDateTime(log.created_at);
+            row.appendChild(dateCell);
+
+            const actorCell = document.createElement("td");
+            actorCell.textContent = log.actor_name || log.actor_id || "-";
+            row.appendChild(actorCell);
+
+            const actionCell = document.createElement("td");
+            actionCell.textContent = log.action || "-";
+            row.appendChild(actionCell);
+
+            const detailsCell = document.createElement("td");
+            detailsCell.textContent = log.details ? JSON.stringify(log.details) : "-";
+            row.appendChild(detailsCell);
+
+            logsBody.appendChild(row);
+          });
+        }
+
+        async function loadLogs() {
+          const response = await fetch("/api/audit-logs");
+          if (!response.ok) {
+            logsBody.innerHTML = "";
+            const row = document.createElement("tr");
+            const cell = document.createElement("td");
+            cell.colSpan = 4;
+            cell.textContent = "Brak dostępu do logów.";
+            row.appendChild(cell);
+            logsBody.appendChild(row);
+            return;
+          }
+          const data = await response.json();
+          renderLogs(data.logs || []);
+        }
+
+        async function init() {
+          try {
+            const response = await fetch("/api/auth/status");
+            const data = await response.json();
+            if (!data.authenticated) {
+              window.location.href = "/login.html";
+              return;
+            }
+            if (!data.user || data.user.id !== adminDiscordId) {
+              window.location.href = "/index.html";
+              return;
+            }
+            loadLogs();
+          } catch (error) {
+            window.location.href = "/login.html";
+          }
+        }
+
+        refreshBtn.addEventListener("click", () => {
+          loadLogs();
+        });
+
+        init();
+      })();
+    </script>
+  </body>
+</html>

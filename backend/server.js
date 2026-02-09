@@ -4,6 +4,7 @@ const session = require('express-session');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
@@ -12,6 +13,13 @@ const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 const GUILD_ID = process.env.GUILD_ID;
 const REQUIRED_ROLE_ID = process.env.REQUIRED_ROLE_ID;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ADMIN_DISCORD_ID = process.env.ADMIN_DISCORD_ID;
+
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  : null;
 
 app.use(cors({
   origin: [DISCORD_REDIRECT_URI.replace('/auth/discord/callback', ''), 'http://localhost:3000'],
@@ -30,6 +38,13 @@ app.use(session({
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
+
+function requireAuth(req, res, next) {
+  if (!req.session.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  return next();
+}
 
 // Login route
 app.get('/auth/discord/login', (req, res) => {
@@ -112,6 +127,51 @@ app.get('/api/auth/status', (req, res) => {
   } else {
     res.json({ authenticated: false });
   }
+});
+
+app.post('/api/audit-logs', requireAuth, async (req, res) => {
+  if (!supabase) {
+    return res.status(500).json({ error: 'Supabase not configured' });
+  }
+
+  const { action, target, details } = req.body || {};
+  const entry = {
+    actor_id: req.session.user.id,
+    actor_name: req.session.user.username,
+    action: action || 'unknown',
+    target: target || null,
+    details: details || null
+  };
+
+  const { error } = await supabase.from('ems_audit_logs').insert([entry]);
+  if (error) {
+    console.error('Audit log insert error:', error.message);
+    return res.status(500).json({ error: 'Log write failed' });
+  }
+
+  return res.json({ success: true });
+});
+
+app.get('/api/audit-logs', requireAuth, async (req, res) => {
+  if (req.session.user.id !== ADMIN_DISCORD_ID) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  if (!supabase) {
+    return res.status(500).json({ error: 'Supabase not configured' });
+  }
+
+  const { data, error } = await supabase
+    .from('ems_audit_logs')
+    .select('id, actor_id, actor_name, action, target, details, created_at')
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  if (error) {
+    console.error('Audit log read error:', error.message);
+    return res.status(500).json({ error: 'Log read failed' });
+  }
+
+  return res.json({ logs: data || [] });
 });
 
 // Logout

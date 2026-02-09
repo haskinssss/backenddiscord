@@ -148,6 +148,14 @@ body {
   color: var(--text);
 }
 
+.admin-only {
+  display: none;
+}
+
+.admin-only.is-visible {
+  display: block;
+}
+
 .site-nav a,
 .footer-links a {
   text-decoration: none;
