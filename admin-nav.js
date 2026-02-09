@@ -1,6 +1,6 @@
 (function () {
   const adminDiscordId = "1150337681310625842";
-  fetch("/api/auth/status")
+  fetch("/api/auth/status", { credentials: "include" })
     .then((response) => response.json())
     .then((data) => {
       if (data.authenticated && data.user && data.user.id === adminDiscordId) {
