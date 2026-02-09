@@ -199,7 +199,6 @@
                 <th>Numer odznaki</th>
                 <th>Imię i nazwisko</th>
                 <th>Stopień</th>
-                <th>Specjalizacja</th>
                 <th>Akcje <input type="checkbox" class="select-all" data-unit="intern" aria-label="Zaznacz wszystkie" /></th>
               </tr>
             </thead>
@@ -208,21 +207,18 @@
                 <td>INT001</td>
                 <td>Anna Nowacka</td>
                 <td>Praktykantka</td>
-                <td>-</td>
                 <td><button class="edit-btn" data-unit="intern" data-id="0">Edytuj</button><button class="del-btn" data-unit="intern" data-id="0">Usuń</button><input type="checkbox" class="row-select" data-unit="intern" data-id="0" /></td>
               </tr>
               <tr>
                 <td>INT002</td>
                 <td>Karol Skowron</td>
                 <td>Praktykant</td>
-                <td>-</td>
                 <td><button class="edit-btn" data-unit="intern" data-id="1">Edytuj</button><button class="del-btn" data-unit="intern" data-id="1">Usuń</button><input type="checkbox" class="row-select" data-unit="intern" data-id="1" /></td>
               </tr>
               <tr>
                 <td>INT003</td>
                 <td>Magdalena Kosińska</td>
                 <td>Praktykantka</td>
-                <td>-</td>
                 <td><button class="edit-btn" data-unit="intern" data-id="2">Edytuj</button><button class="del-btn" data-unit="intern" data-id="2">Usuń</button><input type="checkbox" class="row-select" data-unit="intern" data-id="2" /></td>
               </tr>
             </tbody>
@@ -251,7 +247,7 @@
             <label for="editRank">Stopień:</label>
             <input type="text" id="editRank" required />
           </div>
-          <div class="form-group">
+          <div class="form-group" id="specFormGroup">
             <label for="editSpec">Specjalizacja:</label>
             <input type="text" id="editSpec" />
           </div>
@@ -341,6 +337,13 @@
             document.getElementById('editRank').value = '';
             document.getElementById('editSpec').value = '';
 
+            const specFormGroup = document.getElementById('specFormGroup');
+            if (currentEditingUnit === 'intern') {
+              specFormGroup.style.display = 'none';
+            } else {
+              specFormGroup.style.display = 'block';
+            }
+
             modal.classList.add('active');
           });
         });
@@ -365,6 +368,13 @@
               document.getElementById('editName').value = data.name || '';
               document.getElementById('editRank').value = data.rank || '';
               document.getElementById('editSpec').value = data.spec || '';
+
+              const specFormGroup = document.getElementById('specFormGroup');
+              if (currentEditingUnit === 'intern') {
+                specFormGroup.style.display = 'none';
+              } else {
+                specFormGroup.style.display = 'block';
+              }
 
               modal.classList.add('active');
             });
@@ -415,7 +425,7 @@
             badge: document.getElementById('editBadge').value.trim(),
             name: document.getElementById('editName').value.trim(),
             rank: document.getElementById('editRank').value.trim(),
-            spec: document.getElementById('editSpec').value.trim() || '-'
+            spec: currentEditingUnit === 'intern' ? '-' : (document.getElementById('editSpec').value.trim() || '-')
           };
 
           if (isAddingNew) {
@@ -477,7 +487,7 @@
           if (!data.length) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 5;
+            cell.colSpan = unit === 'intern' ? 4 : 5;
             cell.textContent = 'Brak wpisów w tej jednostce.';
             row.appendChild(cell);
             tbody.appendChild(row);
@@ -487,13 +497,22 @@
 
           data.forEach((row) => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${row.badge || '-'}</td>
-              <td>${row.name || '-'}</td>
-              <td>${row.rank || '-'}</td>
-              <td>${row.spec || '-'}</td>
-              <td><button class="edit-btn" data-unit="${unit}" data-id="${row.id}">Edytuj</button><button class="del-btn" data-unit="${unit}" data-id="${row.id}">Usuń</button><input type="checkbox" class="row-select" data-unit="${unit}" data-id="${row.id}" /></td>
-            `;
+            if (unit === 'intern') {
+              tr.innerHTML = `
+                <td>${row.badge || '-'}</td>
+                <td>${row.name || '-'}</td>
+                <td>${row.rank || '-'}</td>
+                <td><button class="edit-btn" data-unit="${unit}" data-id="${row.id}">Edytuj</button><button class="del-btn" data-unit="${unit}" data-id="${row.id}">Usuń</button><input type="checkbox" class="row-select" data-unit="${unit}" data-id="${row.id}" /></td>
+              `;
+            } else {
+              tr.innerHTML = `
+                <td>${row.badge || '-'}</td>
+                <td>${row.name || '-'}</td>
+                <td>${row.rank || '-'}</td>
+                <td>${row.spec || '-'}</td>
+                <td><button class="edit-btn" data-unit="${unit}" data-id="${row.id}">Edytuj</button><button class="del-btn" data-unit="${unit}" data-id="${row.id}">Usuń</button><input type="checkbox" class="row-select" data-unit="${unit}" data-id="${row.id}" /></td>
+              `;
+            }
             tbody.appendChild(tr);
           });
           attachEditListeners();
