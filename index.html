@@ -159,12 +159,5 @@
     </script>
     <script src="user-info.js"></script>
     <script src="admin-nav.js"></script>
-    <script>
-      // Redirect to login if there's an error parameter
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('error')) {
-        window.location.href = '/login.html' + window.location.search;
-      }
-    </script>
   </body>
 </html>

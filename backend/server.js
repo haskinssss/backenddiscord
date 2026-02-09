@@ -11,6 +11,7 @@ const app = express();
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
 const REQUIRED_ROLE_ID = process.env.REQUIRED_ROLE_ID;
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -81,11 +82,16 @@ app.get('/auth/discord/callback', async (req, res) => {
 
     const user = userResponse.data;
 
-    // Check guild membership and role
+    // Check guild membership and role using bot token
+    if (!DISCORD_BOT_TOKEN) {
+      console.error('DISCORD_BOT_TOKEN not configured');
+      return res.redirect('/login.html?error=server_config');
+    }
+
     try {
       const memberResponse = await axios.get(
-        `https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`,
-        { headers: { Authorization: `Bearer ${access_token}` } }
+        `https://discord.com/api/guilds/${GUILD_ID}/members/${user.id}`,
+        { headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` } }
       );
 
       const member = memberResponse.data;
@@ -111,7 +117,11 @@ app.get('/auth/discord/callback', async (req, res) => {
       });
 
     } catch (guildError) {
-      return res.redirect('/login.html?error=not_in_guild');
+      console.error('Guild membership check failed:', guildError.response?.status, guildError.response?.data);
+      if (guildError.response?.status === 404) {
+        return res.redirect('/login.html?error=not_in_guild');
+      }
+      return res.redirect('/login.html?error=no_role');
     }
 
   } catch (error) {
