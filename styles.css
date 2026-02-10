@@ -23,6 +23,7 @@ body {
   color: var(--text);
   min-height: 100vh;
   line-height: 1.6;
+  padding-bottom: 120px;
 }
 
 .page-glow {
@@ -523,8 +524,10 @@ main {
 }
 
 .site-footer {
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 9;
   padding: 30px 6vw;
   border-top: 1px solid var(--border);
