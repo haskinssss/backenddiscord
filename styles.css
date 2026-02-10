@@ -523,6 +523,9 @@ main {
 }
 
 .site-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 9;
   padding: 30px 6vw;
   border-top: 1px solid var(--border);
   background: rgba(11, 18, 24, 0.85);
